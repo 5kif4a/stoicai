@@ -1,0 +1,38 @@
+name: stoicai
+
+services:
+  bot:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    depends_on:
+      - mongo
+    volumes:
+      - ../config:/config 
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - ../data/mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: 'mark'
+      MONGO_INITDB_ROOT_PASSWORD: 'aurelius'
+      MONGO_INITDB_DATABASE: 'stoicai'
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  mongo-express:
+    image: mongo-express:latest
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: test
+      ME_CONFIG_BASICAUTH_PASSWORD: test
+      ME_CONFIG_MONGODB_URL: mongodb://mark:aurelius@mongo:27017
+    depends_on:
+      mongo:
+        condition: service_healthy

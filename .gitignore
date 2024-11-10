@@ -162,3 +162,5 @@ cython_debug/
 .idea/
 # Ignore dynaconf secret files
 .secrets.*
+
+data
