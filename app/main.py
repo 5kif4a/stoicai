@@ -28,7 +28,7 @@ SYSTEM_PROMPT = {
     "content": settings.openai_prompt_content,
 }
 
-redis = aioredis.from_url("redis://redis:6379")
+redis = aioredis.from_url(settings.redis_url)
 
 
 async def post_init(application: Application) -> None:

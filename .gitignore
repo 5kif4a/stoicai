@@ -162,6 +162,7 @@ cython_debug/
 .idea/
 # Ignore dynaconf secret files
 .secrets.*
+settings.toml
 
 data
 
