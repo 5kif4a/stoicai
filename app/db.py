@@ -40,4 +40,4 @@ class Chat(Document):
 
 async def init_db():
     client = AsyncIOMotorClient(settings.db_url)
-    await init_beanie(database=client.get_database(), document_models=[Chat])
+    await init_beanie(database=client.get_database(), document_models=[Chat, Message])

@@ -1,3 +1,4 @@
+import json
 import logging
 import random
 from datetime import datetime
@@ -12,7 +13,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-import aioredis
+from redis import asyncio as aioredis
 from app.ai import get_gpt_assistant_response
 from app.config import settings
 from app.db import Chat, Message, Role, init_db
@@ -38,12 +39,12 @@ async def post_init(application: Application) -> None:
 async def get_last_messages_from_cache(chat_id: int, n: int) -> list[Message]:
     cache_key = f"chat:{chat_id}:messages"
     messages = await redis.lrange(cache_key, -n, -1)
-    return [Message(**eval(msg)) for msg in messages]
+    return [Message(**json.loads(msg)) for msg in messages]
 
 
 async def save_message_to_cache(chat_id: int, message: Message):
     cache_key = f"chat:{chat_id}:messages"
-    await redis.rpush(cache_key, message.dict())
+    await redis.rpush(cache_key, message.model_dump_json())
     await redis.ltrim(cache_key, -50, -1)
 
 
@@ -94,8 +95,9 @@ async def handle_user_message(update: Update, context: CallbackContext):
         await save_message_to_db(user_message)
         await save_message_to_cache(message.chat_id, user_message)
 
-        thinking_message = asyncio.create_task(asyncio.sleep(2))
-        await thinking_message
+        thinking_message = await message.reply_text(
+            settings.messenger_bot_thinking_message
+        )
 
         N = 20
         last_messages = await get_last_messages_from_cache(message.chat_id, N)
@@ -104,7 +106,7 @@ async def handle_user_message(update: Update, context: CallbackContext):
             {"role": msg.sender.value, "content": msg.content} for msg in last_messages
         ]
 
-        gpt_response = await get_gpt_assistant_response(chat_history)
+        gpt_response = get_gpt_assistant_response(chat_history)
 
         bot_response = Message(
             chat_id=message.chat_id,
@@ -114,7 +116,8 @@ async def handle_user_message(update: Update, context: CallbackContext):
         )
         await save_message_to_db(bot_response)
         await save_message_to_cache(message.chat_id, bot_response)
-
+        
+        await thinking_message.delete()
         await message.reply_text(gpt_response)
     except Exception as e:
         logger.error(f"Error handling user message: {e}")

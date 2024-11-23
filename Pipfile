@@ -8,7 +8,7 @@ python-telegram-bot = "*"
 openai = "*"
 dynaconf = "*"
 beanie = "*"
-aioredis = "*"
+redis = "*"
 
 [dev-packages]
 isort = "*"
