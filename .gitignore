@@ -164,3 +164,5 @@ cython_debug/
 .secrets.*
 
 data
+
+docker-compose.yml

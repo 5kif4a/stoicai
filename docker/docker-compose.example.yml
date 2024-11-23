@@ -7,6 +7,7 @@ services:
       dockerfile: docker/Dockerfile
     depends_on:
       - mongo
+      - redis
     volumes:
       - ../config:/config 
 
@@ -36,3 +37,15 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+
+  redis:
+    image: redis:latest
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - ../data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
