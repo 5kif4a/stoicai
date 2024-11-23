@@ -9,6 +9,7 @@ openai = "*"
 dynaconf = "*"
 beanie = "*"
 redis = "*"
+telegramify-markdown = "*"
 
 [dev-packages]
 isort = "*"

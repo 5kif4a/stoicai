@@ -1,22 +1,26 @@
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 from app.config import settings
 
 __all__ = ("client", "get_gpt_assistant_response")
 
-client = OpenAI(api_key=settings.openai_api_key)
+client = AsyncOpenAI(api_key=settings.openai_api_key)
 
 CHAT_MODEL_ID = settings.openai_chat_model_id
 
+SYSTEM_PROMPT = {
+    "role": "system",
+    "content": settings.openai_prompt_content,
+}
 
-def get_gpt_assistant_response(chat_history):
+async def get_gpt_assistant_response(chat_history: list[dict[str, str]]) -> str:
     try:
-        response = client.chat.completions.create(
+        response = await client.chat.completions.create(
             model=CHAT_MODEL_ID,
-            messages=chat_history,
+            messages=[SYSTEM_PROMPT] + chat_history,
             max_tokens=settings.openai_max_tokens,
             n=1,
-            temperature=0.7,
+            temperature=0.8,
         )
         return response.choices[0].message.content.strip()
     except Exception as e:

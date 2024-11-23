@@ -2,7 +2,6 @@ import json
 import logging
 import random
 from datetime import datetime
-import asyncio
 
 from telegram import Update
 from telegram.ext import (
@@ -14,6 +13,7 @@ from telegram.ext import (
     filters,
 )
 from redis import asyncio as aioredis
+from telegramify_markdown import markdownify
 from app.ai import get_gpt_assistant_response
 from app.config import settings
 from app.db import Chat, Message, Role, init_db
@@ -22,11 +22,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
-SYSTEM_PROMPT = {
-    "role": "system",
-    "content": settings.openai_prompt_content,
-}
 
 redis = aioredis.from_url(settings.redis_url)
 
@@ -106,7 +101,7 @@ async def handle_user_message(update: Update, context: CallbackContext):
             {"role": msg.sender.value, "content": msg.content} for msg in last_messages
         ]
 
-        gpt_response = get_gpt_assistant_response(chat_history)
+        gpt_response = await get_gpt_assistant_response(chat_history)
 
         bot_response = Message(
             chat_id=message.chat_id,
@@ -116,9 +111,11 @@ async def handle_user_message(update: Update, context: CallbackContext):
         )
         await save_message_to_db(bot_response)
         await save_message_to_cache(message.chat_id, bot_response)
-        
+
         await thinking_message.delete()
-        await message.reply_text(gpt_response)
+        await message.reply_text(
+            markdownify(gpt_response), parse_mode="MarkdownV2"
+        )
     except Exception as e:
         logger.error(f"Error handling user message: {e}")
         error_message = random.choice(settings.messenger_bot_error_messages)

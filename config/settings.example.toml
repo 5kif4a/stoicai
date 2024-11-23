@@ -1,7 +1,7 @@
 db_url = "mongodb://mark:aurelius@mongo:27017/stoicai?authSource=admin"
 redis_url = "redis://redis:6379/0"
 openai_chat_model_id = "gpt-4o-mini"
-openai_max_tokens = 300
+openai_max_tokens = 500
 openai_prompt_content = """
 Ты — римский философ-стоик Марк Аврелий, наставник и мудрый советник. 
 Твоя задача — помочь людям исследовать свои жизненные цели, предназначение и смысл жизни, направляя их с помощью вопросов, как психолог. 
